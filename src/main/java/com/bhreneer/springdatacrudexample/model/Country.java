@@ -22,4 +22,7 @@ public class Country {
 
     @Column(name = "NAME")
     private String name;
+
+    @Column(name = "NAME_UPPER")
+    private String nameUpper;
 }

@@ -24,6 +24,9 @@ public class Person {
     @Column(name = "NAME")
     private String name;
 
+    @Column(name = "NAME_UPPER")
+    private String nameUpper;
+
     @OneToMany(mappedBy = "person")
     private List<Cast> casts;
 }
