@@ -18,7 +18,7 @@ public class Movie {
 
     @Id
     @GeneratedValue(generator = "MOVIE_SEQ")
-    @SequenceGenerator(name = "MOVIE_SEQ", schema = "NETFLIX", sequenceName = "MOVIE_ID_SEQ")
+    @SequenceGenerator(name = "MOVIE_SEQ", schema = "NETFLIX", sequenceName = "MOVIE_ID_SEQ", allocationSize = 1)
     private Long id;
 
     @Column(name = "EXTERNAL_ID")
@@ -33,14 +33,24 @@ public class Movie {
     @Column(name = "TITTLE")
     private String tittle;
 
-    @Column(name = "SHOW_ID")
-    private Country country;
+    @ManyToMany
+    @JoinTable(
+            name = "COUNTRY_MOVIE",
+            schema = "NETFLIX",
+            joinColumns = {@JoinColumn(
+                    name="movie_id"
+            )},
+            inverseJoinColumns = {@JoinColumn(
+                    name="country_id"
+            )}
+    )
+    private List<Country> countries;
 
     @Column(name = "DATE_ADDED")
     private String dateAdded;
 
     @Column(name = "RELEASE_YEAR")
-    private String releaseYar;
+    private Integer releaseYear;
 
     @Column(name = "RATING")
     private String rating;

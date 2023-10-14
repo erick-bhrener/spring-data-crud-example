@@ -30,13 +30,14 @@ public class PersonServiceImpl implements PersonService {
     }
 
     @Override
-    public Person processDirector(CSVRecord csvRecord, Movie movie) {
+    public void processDirector(CSVRecord csvRecord, Movie movie) {
 
-        Person director = processPerson(csvRecord.get("director"));
+        String[] directors = csvRecord.get("director").trim().split(",");
+        for(String director : directors) {
+            Person directorPerson = processPerson(csvRecord.get("director"));
+            Cast cast = castService.processCastDirector(directorPerson, movie);
+        }
 
-        Cast cast = castService.processCastDirector(director, movie);
-
-        return director;
     }
 
     public Person processArtist(String name, Movie movie) {
@@ -54,9 +55,9 @@ public class PersonServiceImpl implements PersonService {
             processArtist(null, movie);
         }
 
-        String[] cast = csvRecord.get("cast").split(",");
+        String[] cast = csvRecord.get("cast").trim().split(",");
         for (String actor: cast) {
-            processArtist(actor, movie);
+            processArtist(actor.trim(), movie);
         }
     }
 

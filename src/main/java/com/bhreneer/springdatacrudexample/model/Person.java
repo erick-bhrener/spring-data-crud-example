@@ -18,7 +18,7 @@ public class Person {
 
     @Id
     @GeneratedValue(generator = "PERSON_SEQ")
-    @SequenceGenerator(name = "PERSON_SEQ", schema = "NETFLIX", sequenceName = "PERSON_ID_SEQ")
+    @SequenceGenerator(name = "PERSON_SEQ", schema = "NETFLIX", sequenceName = "PERSON_ID_SEQ", allocationSize = 1)
     private Long id;
 
     @Column(name = "NAME")

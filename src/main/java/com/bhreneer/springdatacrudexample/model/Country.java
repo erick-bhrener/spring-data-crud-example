@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.util.HashSet;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -17,7 +19,7 @@ public class Country {
 
     @Id
     @GeneratedValue(generator = "COUNTRY_SEQ")
-    @SequenceGenerator(name = "COUNTRY_SEQ", schema = "NETFLIX", sequenceName = "COUNTRY_ID_SEQ")
+    @SequenceGenerator(name = "COUNTRY_SEQ", schema = "NETFLIX", sequenceName = "COUNTRY_ID_SEQ", allocationSize = 1)
     private Long id;
 
     @Column(name = "NAME")
@@ -25,4 +27,7 @@ public class Country {
 
     @Column(name = "NAME_UPPER")
     private String nameUpper;
+
+    @ManyToMany(mappedBy = "countries", fetch = FetchType.LAZY)
+    private List<Movie> movies;
 }

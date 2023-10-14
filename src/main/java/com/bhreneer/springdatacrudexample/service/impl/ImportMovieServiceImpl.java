@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -60,7 +61,7 @@ public class ImportMovieServiceImpl implements ImportMovieService {
     @Async
     private void processCSVRecord (CSVRecord csvRecord) {
         log.info("Processing movie {}.", csvRecord.get("show_id"));
-        Country country = countryService.processCountry(csvRecord);
+        List<Country> country = countryService.processCountry(csvRecord);
         Movie movie = movieService.processMovie(csvRecord, country);
         personService.processDirector(csvRecord, movie);
         personService.processCast(csvRecord, movie);

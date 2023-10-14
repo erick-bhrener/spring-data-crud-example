@@ -17,7 +17,7 @@ public class Cast {
 
     @Id
     @GeneratedValue(generator = "CAST_SEQ")
-    @SequenceGenerator(name = "CAST_SEQ", schema = "NETFLIX", sequenceName = "CAST_ID_SEQ")
+    @SequenceGenerator(name = "CAST_SEQ", schema = "NETFLIX", sequenceName = "CAST_ID_SEQ", allocationSize = 1)
     private Long id;
 
     @ManyToOne(cascade = CascadeType.ALL)
