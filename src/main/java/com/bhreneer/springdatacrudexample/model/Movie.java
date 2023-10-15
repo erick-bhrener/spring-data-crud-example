@@ -33,7 +33,7 @@ public class Movie {
     @Column(name = "TITTLE")
     private String tittle;
 
-    @ManyToMany
+    @ManyToMany(cascade = CascadeType.ALL)
     @JoinTable(
             name = "COUNTRY_MOVIE",
             schema = "NETFLIX",
@@ -64,6 +64,6 @@ public class Movie {
     @Column(name = "DESCRIPTION")
     private String description;
 
-    @OneToMany(mappedBy = "movie")
+    @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL)
     private List<Cast> cast;
 }

@@ -17,6 +17,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -36,17 +39,19 @@ public class ImportMovieServiceImpl implements ImportMovieService {
     @Override
     public void importMovies(MultipartFile file) {
         log.info("ImportMovieServiceImpl - importMovies: {}", file.getName());
+        InputStream inputStream = null;
+        long totalComputed = 0;
         try{
-            InputStream inputStream = file.getInputStream();
+            inputStream = file.getInputStream();
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
             CSVParser csvParser = new CSVParser(bufferedReader,
                     CSVFormat.DEFAULT.withFirstRecordAsHeader().withIgnoreHeaderCase().withTrim());
 
-            Iterable<CSVRecord> csvRecords = csvParser.getRecords();
-
-            for(CSVRecord csvRecord : csvRecords) {
-                processCSVRecord(csvRecord);
-            }
+            List<CSVRecord> csvRecords = csvParser.getRecords();
+            totalComputed = csvRecords
+                    .parallelStream()
+                    .map(csvRecord -> processCSVRecord(csvRecord))
+                    .count();
 
         } catch (UnsupportedEncodingException e) {
             log.error("Error reading csv file.");
@@ -54,18 +59,30 @@ public class ImportMovieServiceImpl implements ImportMovieService {
         } catch (IOException e) {
             log.error("Error reading csv file.");
             e.printStackTrace();
+        } finally {
+            try {
+                inputStream.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
-        log.info("End ImportMovieServiceImpl - importMovies: {}", file.getName());
+        log.info("End ImportMovieServiceImpl - importMovies: {} - Total Movies: {}", file.getName(), totalComputed);
     }
 
     @Async
-    private void processCSVRecord (CSVRecord csvRecord) {
+    public Movie processCSVRecord (CSVRecord csvRecord) {
         log.info("Processing movie {}.", csvRecord.get("show_id"));
-        List<Country> country = countryService.processCountry(csvRecord);
-        Movie movie = movieService.processMovie(csvRecord, country);
-        personService.processDirector(csvRecord, movie);
-        personService.processCast(csvRecord, movie);
+        Movie movie = null;
+        try {
+            List<Country> country = countryService.processCountry(csvRecord);
+            movie = movieService.processMovie(csvRecord, country);
+            personService.processDirector(csvRecord, movie);
+            personService.processCast(csvRecord, movie);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         log.info("Ended processing movie {}.", csvRecord.get("show_id"));
+        return movie;
     }
 
 }

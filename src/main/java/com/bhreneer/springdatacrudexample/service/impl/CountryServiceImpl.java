@@ -55,7 +55,7 @@ public class CountryServiceImpl implements CountryService {
                 .name(country)
                 .nameUpper(country.toUpperCase())
                 .build();
-        return save(countrySave);
+        return this.save(countrySave);
     }
 
     private Country processUndefined() {

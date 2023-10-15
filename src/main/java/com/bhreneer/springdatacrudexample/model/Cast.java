@@ -20,11 +20,11 @@ public class Cast {
     @SequenceGenerator(name = "CAST_SEQ", schema = "NETFLIX", sequenceName = "CAST_ID_SEQ", allocationSize = 1)
     private Long id;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "MOVIE_ID")
     private Movie movie;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "PERSON_ID")
     private Person person;
 

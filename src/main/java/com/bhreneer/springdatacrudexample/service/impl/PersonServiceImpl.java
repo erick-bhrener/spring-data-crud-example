@@ -34,7 +34,7 @@ public class PersonServiceImpl implements PersonService {
 
         String[] directors = csvRecord.get("director").trim().split(",");
         for(String director : directors) {
-            Person directorPerson = processPerson(csvRecord.get("director"));
+            Person directorPerson = processPerson(director.trim());
             Cast cast = castService.processCastDirector(directorPerson, movie);
         }
 
@@ -63,7 +63,7 @@ public class PersonServiceImpl implements PersonService {
 
     private Person processPerson(String name) {
         Person person = null;
-        if(StringUtils.hasLength(name)) {
+        if(!StringUtils.hasLength(name)) {
             person = processUndefined();
         } else {
             Optional<Person> personOptional = personRepository.findByNameUpper(name.toUpperCase());
