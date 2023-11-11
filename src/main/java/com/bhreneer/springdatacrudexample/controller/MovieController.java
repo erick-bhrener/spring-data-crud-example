@@ -32,9 +32,9 @@ public class MovieController {
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> importFile(@RequestPart("file") MultipartFile csvFile) {
         log.info("Uploading new file.");
-
         if(CSVUtils.hasCSVFormat(csvFile)) {
-            importMovieService.importMovies(csvFile);
+            String msg = importMovieService.importMovies(csvFile);
+            return ResponseEntity.status(HttpStatus.OK).body(msg);
         }
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body( new String("Not a CSV file"));

@@ -4,5 +4,5 @@ import org.springframework.web.multipart.MultipartFile;
 
 public interface ImportMovieService {
 
-    void importMovies(MultipartFile file);
+    String importMovies(MultipartFile file);
 }
