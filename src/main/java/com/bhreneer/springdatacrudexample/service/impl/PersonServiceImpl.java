@@ -4,11 +4,13 @@ import com.bhreneer.springdatacrudexample.model.Cast;
 import com.bhreneer.springdatacrudexample.model.Movie;
 import com.bhreneer.springdatacrudexample.model.Person;
 import com.bhreneer.springdatacrudexample.repository.PersonRepository;
+import com.bhreneer.springdatacrudexample.service.CacheService;
 import com.bhreneer.springdatacrudexample.service.CastService;
 import com.bhreneer.springdatacrudexample.service.PersonService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVRecord;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -19,14 +21,22 @@ import java.util.Optional;
 public class PersonServiceImpl implements PersonService {
 
     private static final String UNDEFINED = "Undefined";
+
     @Autowired
     private PersonRepository personRepository;
+
     @Autowired
     private CastService castService;
 
+    @Autowired
+    @Qualifier("PersonCacheServiceImpl")
+    private CacheService cacheService;
+
     @Override
     public Person save(Person person) {
-        return this.personRepository.save(person);
+        Person personSave = this.personRepository.save(person);
+        cacheService.put(person.getNameUpper(), personSave);
+        return personSave;
     }
 
     @Override
@@ -66,7 +76,7 @@ public class PersonServiceImpl implements PersonService {
         if(!StringUtils.hasLength(name)) {
             person = processUndefined();
         } else {
-            Optional<Person> personOptional = personRepository.findByNameUpper(name.toUpperCase());
+            Optional<Person> personOptional = this.findByNameUpper(name.toUpperCase());
             if(personOptional.isPresent()) {
                 person = personOptional.get();
             } else {
@@ -80,7 +90,7 @@ public class PersonServiceImpl implements PersonService {
     }
 
     private Person processUndefined() {
-        Optional<Person> person = personRepository.findByNameUpper(UNDEFINED.toUpperCase());
+        Optional<Person> person = this.findByNameUpper(UNDEFINED.toUpperCase());
         if(person.isPresent()) {
             return person.get();
         }
@@ -88,5 +98,15 @@ public class PersonServiceImpl implements PersonService {
                 .name(UNDEFINED)
                 .nameUpper(UNDEFINED.toUpperCase())
                 .build());
+    }
+
+    @Override
+    public Optional<Person> findByNameUpper(String nameUpper) {
+        Optional<Person> person = cacheService.get(nameUpper);
+        if(person.isPresent()) {
+            log.info("Person {} found in cache.", nameUpper);
+            return person;
+        }
+        return personRepository.findByNameUpper(UNDEFINED.toUpperCase());
     }
 }
