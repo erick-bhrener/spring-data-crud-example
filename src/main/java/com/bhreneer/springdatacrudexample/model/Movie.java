@@ -33,7 +33,7 @@ public class Movie {
     @Column(name = "TITTLE")
     private String tittle;
 
-    @ManyToMany(cascade = CascadeType.ALL)
+    @ManyToMany(cascade = CascadeType.MERGE)
     @JoinTable(
             name = "COUNTRY_MOVIE",
             schema = "NETFLIX",

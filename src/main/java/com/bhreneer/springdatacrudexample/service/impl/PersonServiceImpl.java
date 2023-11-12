@@ -1,19 +1,24 @@
 package com.bhreneer.springdatacrudexample.service.impl;
 
 import com.bhreneer.springdatacrudexample.model.Cast;
+import com.bhreneer.springdatacrudexample.model.Country;
 import com.bhreneer.springdatacrudexample.model.Movie;
 import com.bhreneer.springdatacrudexample.model.Person;
+import com.bhreneer.springdatacrudexample.model.dto.MovieCSVRecordDTO;
 import com.bhreneer.springdatacrudexample.repository.PersonRepository;
 import com.bhreneer.springdatacrudexample.service.CacheService;
 import com.bhreneer.springdatacrudexample.service.CastService;
 import com.bhreneer.springdatacrudexample.service.PersonService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVRecord;
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import javax.transaction.Transactional;
 import java.util.Optional;
 
 @Service
@@ -33,16 +38,17 @@ public class PersonServiceImpl implements PersonService {
     private CacheService cacheService;
 
     @Override
+    @Transactional
     public Person save(Person person) {
-        Person personSave = this.personRepository.save(person);
+        Person personSave = this.personRepository.saveAndFlush(person);
         cacheService.put(person.getNameUpper(), personSave);
         return personSave;
     }
 
     @Override
-    public void processDirector(CSVRecord csvRecord, Movie movie) {
+    public void processDirector(MovieCSVRecordDTO recordDTO, Movie movie) {
 
-        String[] directors = csvRecord.get("director").trim().split(",");
+        String[] directors = recordDTO.getDirector().trim().split(",");
         for(String director : directors) {
             Person directorPerson = processPerson(director.trim());
             Cast cast = castService.processCastDirector(directorPerson, movie);
@@ -60,13 +66,14 @@ public class PersonServiceImpl implements PersonService {
     }
 
     @Override
-    public void processCast(CSVRecord csvRecord, Movie movie) {
-        if(!csvRecord.isSet("cast")) {
+    public void processCast(MovieCSVRecordDTO recordDTO, Movie movie) {
+        if(!StringUtils.hasLength(recordDTO.getCast())) {
             processArtist(null, movie);
         }
 
-        String[] cast = csvRecord.get("cast").trim().split(",");
+        String[] cast = recordDTO.getCast().trim().split(",");
         for (String actor: cast) {
+            log.info("Processing actor {}", actor.trim());
             processArtist(actor.trim(), movie);
         }
     }
@@ -104,7 +111,6 @@ public class PersonServiceImpl implements PersonService {
     public Optional<Person> findByNameUpper(String nameUpper) {
         Optional<Person> person = cacheService.get(nameUpper);
         if(person.isPresent()) {
-            log.info("Person {} found in cache.", nameUpper);
             return person;
         }
         return personRepository.findByNameUpper(UNDEFINED.toUpperCase());

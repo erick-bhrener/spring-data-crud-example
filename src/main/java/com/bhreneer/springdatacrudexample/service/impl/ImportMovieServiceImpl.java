@@ -1,8 +1,11 @@
 package com.bhreneer.springdatacrudexample.service.impl;
 
+import com.bhreneer.springdatacrudexample.builder.MovieCSVRecordBuilder;
 import com.bhreneer.springdatacrudexample.exception.ValidateException;
 import com.bhreneer.springdatacrudexample.model.Country;
 import com.bhreneer.springdatacrudexample.model.Movie;
+import com.bhreneer.springdatacrudexample.model.dto.MovieCSVRecordDTO;
+import com.bhreneer.springdatacrudexample.publisher.MoviePublisher;
 import com.bhreneer.springdatacrudexample.service.CountryService;
 import com.bhreneer.springdatacrudexample.service.ImportMovieService;
 import com.bhreneer.springdatacrudexample.service.MovieService;
@@ -20,6 +23,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 @Slf4j
@@ -36,11 +40,18 @@ public class ImportMovieServiceImpl implements ImportMovieService {
     @Autowired
     private PersonService personService;
 
+    @Autowired
+    private MoviePublisher moviePublisher;
+
+    @Autowired
+    private MovieCSVRecordBuilder builder;
+
     @Override
     public String importMovies(MultipartFile file) {
         log.info("ImportMovieServiceImpl - importMovies: {}", file.getName());
+        long start = System.currentTimeMillis();
         InputStream inputStream = null;
-        long totalComputed = 0;
+        AtomicInteger totalComputed = new AtomicInteger(0);
         StringBuilder finalMsg = new StringBuilder();
         try{
             inputStream = file.getInputStream();
@@ -50,15 +61,17 @@ public class ImportMovieServiceImpl implements ImportMovieService {
 
             List<CSVRecord> csvRecords = csvParser.getRecords();
 
-            for (CSVRecord csvRecord : csvRecords) {
-                Movie movie = processCSVRecord(csvRecord);
-                if(Optional.ofNullable(movie).isPresent()){
-                    totalComputed += totalComputed + 1;
+            AtomicInteger finalTotalComputed = totalComputed;
+
+            csvRecords.parallelStream().forEach(csvRecord -> {
+                MovieCSVRecordDTO recordDTO = processCSVRecord(csvRecord);
+                if(Optional.ofNullable(recordDTO).isPresent()){
+                    finalTotalComputed.getAndIncrement();
                 } else {
                     finalMsg.append("Line ").append(csvRecord.getRecordNumber()).append(" was not processed. It already exists.").append(System.lineSeparator());
                 }
-            }
-
+            });
+            totalComputed = finalTotalComputed;
         } catch (UnsupportedEncodingException e) {
             log.error("Error reading csv file.");
             e.printStackTrace();
@@ -72,27 +85,41 @@ public class ImportMovieServiceImpl implements ImportMovieService {
                 throw new RuntimeException(e);
             }
         }
-        log.info("End ImportMovieServiceImpl - importMovies: {} - Total Movies: {}", file.getName(), totalComputed);
-        return finalMsg.append(totalComputed).append(" movies were added.").toString();
+        long end = System.currentTimeMillis();
+        log.info("End ImportMovieServiceImpl - importMovies: {} - Total Movies: {} - end-start {} ms", file.getName(), totalComputed, end-start);
+        return finalMsg.append(totalComputed).append(" movies were added. Time: ").append(end-start).append(" ms").toString();
     }
 
     @Async
-    public Movie processCSVRecord (CSVRecord csvRecord) {
+    public MovieCSVRecordDTO processCSVRecord (CSVRecord csvRecord) {
         log.info("Processing movie {}.", csvRecord.get("show_id"));
-        Movie movie = null;
+        MovieCSVRecordDTO recordDTO = null;
         try {
             movieService.validateMovieCSVRecord(csvRecord);
-            List<Country> country = countryService.processCountry(csvRecord);
-            movie = movieService.processMovie(csvRecord, country);
-            personService.processDirector(csvRecord, movie);
-            personService.processCast(csvRecord, movie);
+            recordDTO = builder.buildDTO(csvRecord);
+            moviePublisher.processMovieCSVRecord(recordDTO);
             log.info("Ended processing movie {}.", csvRecord.get("show_id"));
         } catch (ValidateException e) {
             log.error("Error processing movie on line {}", csvRecord.getRecordNumber());
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return movie;
+        return recordDTO;
+    }
+
+    @Override
+    public void processCSVRecordFromQueue(MovieCSVRecordDTO recordDTO) {
+        log.info("Processing movie {}.", recordDTO.getShowId());
+        Movie movie = null;
+        try {
+            List<Country> country = countryService.processCountry(recordDTO);
+            movie = movieService.processMovie(recordDTO, country);
+            personService.processDirector(recordDTO, movie);
+            personService.processCast(recordDTO, movie);
+            log.info("Ended processing movie {}.", recordDTO.getShowId());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }

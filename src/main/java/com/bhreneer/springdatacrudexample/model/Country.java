@@ -6,7 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import java.util.HashSet;
 import java.util.List;
 
 @Data
@@ -25,7 +24,7 @@ public class Country {
     @Column(name = "NAME")
     private String name;
 
-    @Column(name = "NAME_UPPER")
+    @Column(name = "NAME_UPPER", unique = true)
     private String nameUpper;
 
     @ManyToMany(mappedBy = "countries", fetch = FetchType.LAZY)

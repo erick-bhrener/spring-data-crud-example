@@ -16,4 +16,31 @@ public class SpringDataCrudExampleConfig {
 
     @Value("${cache.initial.size}")
     private int cacheInitialSize;
+
+    @Value("${rabbitmq.queue}")
+    private String queueName;
+
+    @Value("${rabbitmq.exchange}")
+    private String exchange;
+
+    @Value("${rabbitmq.routingkey}")
+    private String routingkey;
+
+    @Value("${rabbitmq.username}")
+    private String username;
+
+    @Value("${rabbitmq.password}")
+    private String password;
+
+    @Value("${rabbitmq.host}")
+    private String host;
+
+    @Value("${rabbitmq.reply.timeout}")
+    private Integer replyTimeout;
+
+    @Value("${rabbitmq.concurrent.consumers}")
+    private Integer concurrentConsumers;
+
+    @Value("${rabbitmq.max.concurrent.consumers}")
+    private Integer maxConcurrentConsumers;
 }

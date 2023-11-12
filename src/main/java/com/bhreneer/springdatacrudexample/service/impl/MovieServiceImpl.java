@@ -4,6 +4,7 @@ import com.bhreneer.springdatacrudexample.enums.ShowType;
 import com.bhreneer.springdatacrudexample.exception.ValidateException;
 import com.bhreneer.springdatacrudexample.model.Country;
 import com.bhreneer.springdatacrudexample.model.Movie;
+import com.bhreneer.springdatacrudexample.model.dto.MovieCSVRecordDTO;
 import com.bhreneer.springdatacrudexample.repository.MovieRepository;
 import com.bhreneer.springdatacrudexample.service.MovieService;
 import com.bhreneer.springdatacrudexample.utils.UUIDUtils;
@@ -32,26 +33,22 @@ public class MovieServiceImpl implements MovieService {
     }
 
     @Override
-    public Movie processMovie(CSVRecord csvRecord, List<Country> countries) {
-        //show_id,type,title,director,cast,country,date_added,release_year,rating,duration,listed_in,description
-        if(csvRecord.isSet("show_id")) {
-            Movie movie = Movie.builder()
-                    .tittle(csvRecord.get("title"))
-                    .countries(countries)
-                    .dateAdded(csvRecord.get("date_added"))
-                    .description(csvRecord.get("description"))
-                    .duration(csvRecord.get("duration"))
-                    .externalId(UUIDUtils.getUUID())
-                    .listedIn(csvRecord.get("listed_in"))
-                    .type(ShowType.valueOfString(csvRecord.get("type")))
-                    .rating(csvRecord.get("rating"))
-                    .releaseYear(ObjectUtils.isEmpty(csvRecord.get("release_year")) ? null : Integer.valueOf(csvRecord.get("release_year")))
-                    .showId(csvRecord.get("show_id"))
-                    .build();
-            return this.save(movie);
-        }
+    public Movie processMovie(MovieCSVRecordDTO csvRecord, List<Country> countries) {
+        Movie movie = Movie.builder()
+                .tittle(csvRecord.getTitle())
+                .countries(countries)
+                .dateAdded(csvRecord.getDataAdded())
+                .description(csvRecord.getDescription())
+                .duration(csvRecord.getDuration())
+                .externalId(UUIDUtils.getUUID())
+                .listedIn(csvRecord.getListedIn())
+                .type(ShowType.valueOfString(csvRecord.getType()))
+                .rating(csvRecord.getRating())
+                .releaseYear(csvRecord.getReleaseYear())
+                .showId(csvRecord.getShowId())
+                .build();
+        return this.save(movie);
 
-        return null;
     }
 
     @Override

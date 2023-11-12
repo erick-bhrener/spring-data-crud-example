@@ -1,23 +1,24 @@
 package com.bhreneer.springdatacrudexample.service.impl;
 
 import com.bhreneer.springdatacrudexample.model.Country;
+import com.bhreneer.springdatacrudexample.model.dto.MovieCSVRecordDTO;
 import com.bhreneer.springdatacrudexample.repository.CountryRepository;
 import com.bhreneer.springdatacrudexample.service.CacheService;
 import com.bhreneer.springdatacrudexample.service.CountryService;
-import com.github.benmanes.caffeine.cache.Cache;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.csv.CSVRecord;
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheConfig;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.caffeine.CaffeineCache;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
-import java.util.*;
+import javax.transaction.Transactional;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -33,21 +34,21 @@ public class CountryServiceImpl implements CountryService {
     private CacheService countryCacheService;
 
     @Override
+    @Transactional(Transactional.TxType.REQUIRES_NEW)
     public Country save(Country country) {
-
         Country countrySave = countryRepository.save(country);
         countryCacheService.put(country.getNameUpper(), countrySave);
         return countrySave;
     }
 
     @Override
-    public List<Country> processCountry(CSVRecord csvRecord) {
-        if(!csvRecord.isSet("country") || !StringUtils.hasLength(csvRecord.get("country").trim())) {
+    public List<Country> processCountry(MovieCSVRecordDTO recordDTO) {
+        if(!StringUtils.hasLength(recordDTO.getCountry()) || !StringUtils.hasLength(recordDTO.getCountry().trim())) {
             return Arrays.asList(processUndefined());
         }
 
         List<Country> listCountry = new ArrayList<>();
-        String[] countries = csvRecord.get("country").trim().split(",");
+        String[] countries = recordDTO.getCountry().trim().split(",");
 
         for (String c : countries) {
             listCountry.add(processCountry(c.trim()));
@@ -82,10 +83,8 @@ public class CountryServiceImpl implements CountryService {
     }
 
     public Country findCountryByNameUpper(String nameUpper) {
-        log.info("Searching country: {}", nameUpper);
         Optional<Country> countryCache = countryCacheService.get(nameUpper);
         if(countryCache.isPresent()) {
-            log.info("Returning cached country: {}", countryCache.get().toString());
             return countryCache.get();
         }
         Optional<Country> country = countryRepository.findByNameUpper(nameUpper);
