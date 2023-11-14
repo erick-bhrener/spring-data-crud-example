@@ -51,6 +51,7 @@ public class PersonServiceImpl implements PersonService {
         String[] directors = recordDTO.getDirector().trim().split(",");
         for(String director : directors) {
             Person directorPerson = processPerson(director.trim());
+            log.info("Director saved {}", directorPerson.toString());
             Cast cast = castService.processCastDirector(directorPerson, movie);
         }
 
@@ -59,7 +60,7 @@ public class PersonServiceImpl implements PersonService {
     public Person processArtist(String name, Movie movie) {
 
         Person actor = processPerson(name);
-
+        log.info("Actor saved {}", actor.toString());
         Cast cast = castService.processCastActor(actor, movie);
 
         return actor;
@@ -79,6 +80,7 @@ public class PersonServiceImpl implements PersonService {
     }
 
     private Person processPerson(String name) {
+        log.info("Processing person {} - is null? {}", name, !StringUtils.hasLength(name));
         Person person = null;
         if(!StringUtils.hasLength(name)) {
             person = processUndefined();
@@ -93,6 +95,7 @@ public class PersonServiceImpl implements PersonService {
                         .build());
             }
         }
+
         return person;
     }
 
@@ -113,6 +116,6 @@ public class PersonServiceImpl implements PersonService {
         if(person.isPresent()) {
             return person;
         }
-        return personRepository.findByNameUpper(UNDEFINED.toUpperCase());
+        return personRepository.findByNameUpper(nameUpper);
     }
 }

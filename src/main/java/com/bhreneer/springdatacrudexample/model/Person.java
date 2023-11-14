@@ -29,4 +29,13 @@ public class Person {
 
     @OneToMany(mappedBy = "person")
     private List<Cast> casts;
+
+    @Override
+    public String toString() {
+        return "Person{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", nameUpper='" + nameUpper + '\'' +
+                '}';
+    }
 }
