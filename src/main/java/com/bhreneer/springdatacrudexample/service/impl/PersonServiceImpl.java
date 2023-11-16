@@ -1,7 +1,6 @@
 package com.bhreneer.springdatacrudexample.service.impl;
 
 import com.bhreneer.springdatacrudexample.model.Cast;
-import com.bhreneer.springdatacrudexample.model.Country;
 import com.bhreneer.springdatacrudexample.model.Movie;
 import com.bhreneer.springdatacrudexample.model.Person;
 import com.bhreneer.springdatacrudexample.model.dto.MovieCSVRecordDTO;
@@ -10,11 +9,8 @@ import com.bhreneer.springdatacrudexample.service.CacheService;
 import com.bhreneer.springdatacrudexample.service.CastService;
 import com.bhreneer.springdatacrudexample.service.PersonService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.csv.CSVRecord;
-import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
