@@ -1,5 +1,6 @@
 package com.bhreneer.springdatacrudexample.controller;
 
+import com.bhreneer.springdatacrudexample.exception.ValidateException;
 import com.bhreneer.springdatacrudexample.model.dto.CountryFilterRequestDTO;
 import com.bhreneer.springdatacrudexample.model.dto.CountryRequestDTO;
 import com.bhreneer.springdatacrudexample.service.CountryService;
@@ -28,7 +29,11 @@ public class CountryController {
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getCountry(@RequestParam("id") Long id) {
-        return ResponseEntity.status(HttpStatus.OK).body(countryService.findCountryById(id));
+        try {
+            return ResponseEntity.status(HttpStatus.OK).body(countryService.findCountryById(id));
+        } catch (ValidateException ve) {
+            return ResponseEntity.status(ve.getHttpStatus()).body(ve.getMessage());
+        }
     }
 
     @PostMapping("/save")
@@ -43,6 +48,10 @@ public class CountryController {
 
     @PutMapping("/{id}")
     public ResponseEntity<?> updateCountry(@Valid @RequestBody CountryRequestDTO requestDTO, @RequestParam("id") Long id) {
-        return ResponseEntity.status(HttpStatus.OK).body(countryService.updateCountry(requestDTO, id));
+        try {
+            return ResponseEntity.status(HttpStatus.OK).body(countryService.updateCountry(requestDTO, id));
+        } catch (ValidateException ve) {
+            return ResponseEntity.status(ve.getHttpStatus()).body(ve.getMessage());
+        }
     }
 }

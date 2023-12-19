@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -123,7 +124,7 @@ public class CountryServiceImpl implements CountryService {
     @Override
     public CountryResponseDTO findCountryById(Long id) throws ValidateException {
         Country country = countryRepository.findById(id).orElseThrow(() ->
-            new ValidateException("Country not found")
+            new ValidateException("Country not found", HttpStatus.NOT_FOUND)
         );
 
         return builder.buildFromEntity(country);
@@ -146,11 +147,11 @@ public class CountryServiceImpl implements CountryService {
     @Override
     public CountryResponseDTO updateCountry(CountryRequestDTO requestDTO, Long id) {
         if(ObjectUtils.isEmpty(requestDTO) || StringUtils.hasLength(requestDTO.getName())) {
-            throw new ValidateException("Name cannot be empty");
+            throw new ValidateException("Name cannot be empty", HttpStatus.BAD_REQUEST);
         }
         String name = requestDTO.getName().trim();
         Country country = countryRepository.findById(id).orElseThrow(() ->
-                new ValidateException("Country not found")
+                new ValidateException("Country not found", HttpStatus.NOT_FOUND)
         );
         country.setName(name);
         country.setNameUpper(name.toUpperCase());
