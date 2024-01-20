@@ -67,9 +67,9 @@ public class CountryServiceImpl implements CountryService {
     }
 
     private Country processCountry(String country) {
-        Country countryFind = findCountryByNameUpper(country.toUpperCase());
-        if(!ObjectUtils.isEmpty(countryFind)) {
-            return countryFind;
+        Optional<Country> countryFind = findCountryByNameUpper(country.toUpperCase());
+        if(countryFind.isPresent()) {
+            return countryFind.get();
         }
 
         Country countrySave = Country.builder()
@@ -80,9 +80,9 @@ public class CountryServiceImpl implements CountryService {
     }
 
     private Country processUndefined() {
-        Country country = findCountryByNameUpper(UNDEFINED.toUpperCase());
-        if(!ObjectUtils.isEmpty(country)) {
-            return country;
+        Optional<Country> country = findCountryByNameUpper(UNDEFINED.toUpperCase());
+        if(country.isPresent()) {
+            return country.get();
         }
         return this.save(Country.builder()
                 .name(UNDEFINED)
@@ -90,13 +90,13 @@ public class CountryServiceImpl implements CountryService {
                 .build());
     }
 
-    public Country findCountryByNameUpper(String nameUpper) {
+    public Optional<Country> findCountryByNameUpper(String nameUpper) {
         Optional<Country> countryCache = countryCacheService.get(nameUpper);
         if(countryCache.isPresent()) {
-            return countryCache.get();
+            return countryCache;
         }
         Optional<Country> country = countryRepository.findByNameUpper(nameUpper);
-        return country.orElse(null);
+        return country;
     }
 
     @Override
@@ -133,7 +133,7 @@ public class CountryServiceImpl implements CountryService {
     @Override
     public CountryResponseDTO saveCountry(CountryRequestDTO requestDTO) {
         String name = requestDTO.getName().trim();
-        Country country = this.findCountryByNameUpper(name.toUpperCase());
+        Country country = this.findCountryByNameUpper(name.toUpperCase()).orElse(null);
         if(ObjectUtils.isEmpty(country)) {
             country = this.save(Country.builder()
                             .name(name)
