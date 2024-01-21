@@ -146,9 +146,10 @@ public class CountryServiceImpl implements CountryService {
 
     @Override
     public CountryResponseDTO updateCountry(CountryRequestDTO requestDTO, Long id) {
-        if(ObjectUtils.isEmpty(requestDTO) || StringUtils.hasLength(requestDTO.getName())) {
+        if(ObjectUtils.isEmpty(requestDTO) || !StringUtils.hasLength(requestDTO.getName())) {
             throw new ValidateException("Name cannot be empty", HttpStatus.BAD_REQUEST);
         }
+        
         String name = requestDTO.getName().trim();
         Country country = countryRepository.findById(id).orElseThrow(() ->
                 new ValidateException("Country not found", HttpStatus.NOT_FOUND)
